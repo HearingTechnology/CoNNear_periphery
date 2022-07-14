@@ -52,3 +52,6 @@ For questions, please reach out to one of the corresponding authors
 * Arthur Van Den Broucke: arthur.vandenbroucke@ugent.be
 * Deepak Baby: deepakbabycet@gmail.com
 * Sarah Verhulst: s.verhulst@ugent.be
+
+> This work was funded with support from the EU Horizon 2020 programme under grant agreement No 678120 (RobSpear).
+
