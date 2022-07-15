@@ -52,7 +52,7 @@ If you use this code, please cite the corresponding papers:
 
 **CoNNear<sub>IHC-ANF</sub>**: Drakopoulos, F., Baby, D. & Verhulst, S. A convolutional neural-network framework for modelling auditory sensory cells and synapses. Commun Biol 4, 827 (2021). https://doi.org/10.1038/s42003-021-02341-5
 
-**CoNNear<sub>ANF</sub> - branched**: Drakopoulos, F. & Verhulst, S. A neural-network framework for the design of individualised hearing-loss compensation. arXiv reprint arXiv:2207.07091 (2022). https://doi.org/10.48550/arxiv.2207.07091
+**CoNNear<sub>ANF</sub> - branched**: Drakopoulos, F. & Verhulst, S. A neural-network framework for the design of individualised hearing-loss compensation. arXiv preprint arXiv:2207.07091 (2022). https://doi.org/10.48550/arxiv.2207.07091
 
 This repository can also be cited separately:
 
