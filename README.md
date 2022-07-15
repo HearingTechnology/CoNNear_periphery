@@ -1,6 +1,6 @@
 ## CoNNear: A convolutional neural-network model of the human auditory periphery
 
-**A faster implementation of the CoNNear periphery model can be found under [branched](https://github.com/HearingTechnology/CoNNear_HAPM/tree/branched), which uses a branched version of the ANF model.**
+**A faster implementation of the CoNNear periphery model can be found under [branched](https://github.com/HearingTechnology/CoNNear_HAPM/tree/branched), which uses a branched version of the ANF model (https://doi.org/10.48550/arxiv.2207.07091).**
 
 This repository contains the CoNNear periphery model and an example Python script `connear_example.py` that can be used to simulate the outputs of each different stage of the auditory periphery to basic auditory stimuli. The *connear* folder contains the five CoNNear modules, which correspond to the trained CNN models of each separate stage of auditory processing. The folder also contains four hearing-impaired (HI) cochlear models that were obtained via [transfer learning](http://dx.doi.org/10.21437/Interspeech.2020-2818), corresponding to the Flat25, Flat35, Slope25, Slope35 HI profiles of the [Verhulstetal2018](https://github.com/HearingTechnology/Verhulstetal2018Model) model. The CoNNear periphery model was first presented in [ICASSP 2022](https://doi.org/10.1109/ICASSP43922.2022.9747683) and was used to design DNN-based hearing-aid strategies. 
 
@@ -46,6 +46,22 @@ The ANF stage was adopted from the [CoNNear_IHC-ANF](https://github.com/HearingT
 7936 context samples are added on the left side and 256 context samples are added on the right side of the input to the models. The ANF models can still take inputs of variable length, however, due to the increased number of layers, this sample length has to be a multiple of 16384 (2<sup>N<sub>enc</sub></sup>, where N<sub>enc</sub> = 14 is the number of layers in the encoder).
 
 ----
+## Citation
+If you use this code, please cite the corresponding papers:
+
+**CoNNear<sub>cochlea</sub>**: Baby, D., Van Den Broucke, A. & Verhulst, S. A convolutional neural-network model of human cochlear mechanics and filter tuning for real-time applications. Nat Mach Intell 3, 134–143 (2021). https://doi.org/10.1038/s42256-020-00286-8
+
+**CoNNear<sub>IHC-ANF</sub>**: Drakopoulos, F., Baby, D. & Verhulst, S. A convolutional neural-network framework for modelling auditory sensory cells and synapses. Commun Biol 4, 827 (2021). https://doi.org/10.1038/s42003-021-02341-5
+
+**CoNNear<sub>ANF</sub> - branched**: Drakopoulos, F. & Verhulst, S. A neural-network framework for the design of individualised hearing-loss compensation. arXiv reprint arXiv:2207.07091 (2022). https://doi.org/10.48550/arxiv.2207.07091
+
+This repository can also be cited separately:
+
+Drakopoulos, F., Van Den Broucke, A., Baby, D. & Verhulst, S. HearingTechnology/CoNNear_periphery: CoNNear: A CNN model of the human auditory periphery (v1.0). Zenodo. (2022). [https://github.com/HearingTechnology/CoNNear_periphery](https://github.com/HearingTechnology/CoNNear_periphery).
+
+[![DOI](https://zenodo.org/badge/322307161.svg)](https://zenodo.org/badge/latestdoi/322307161)
+
+##
 For questions, please reach out to one of the corresponding authors
 
 * Fotios Drakopoulos: fotios.drakopoulos@ugent.be
