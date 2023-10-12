@@ -2,7 +2,7 @@
 
 **A faster implementation of the CoNNear periphery model can be found under [branched](https://github.com/HearingTechnology/CoNNear_HAPM/tree/branched), which uses a branched version of the ANF model (https://doi.org/10.48550/arxiv.2207.07091).**
 
-This repository contains the CoNNear periphery model and an example Python script `connear_example.py` that can be used to simulate the outputs of each different stage of the auditory periphery to basic auditory stimuli. The *connear* folder contains the five CoNNear modules, which correspond to the trained CNN models of each separate stage of auditory processing. The folder also contains four hearing-impaired (HI) cochlear models that were obtained via [transfer learning](http://dx.doi.org/10.21437/Interspeech.2020-2818), corresponding to the Flat25, Flat35, Slope25, Slope35 HI profiles of the [Verhulstetal2018](https://github.com/HearingTechnology/Verhulstetal2018Model) model. The CoNNear periphery model was first presented in [ICASSP 2022](https://doi.org/10.1109/ICASSP43922.2022.9747683) and was used to design DNN-based hearing-aid strategies. 
+This repository contains the CoNNear periphery model and an example Python script `connear_example.py` that can be used to simulate the outputs of each different stage of the auditory periphery to basic auditory stimuli. The *connear* folder contains the five CoNNear modules, which correspond to the trained CNN models of each separate stage of auditory processing. The folder also contains four hearing-impaired (HI) cochlear models that were obtained via [transfer learning](http://dx.doi.org/10.21437/Interspeech.2020-2818), corresponding to the Flat25, Flat35, Slope25, Slope35 HI profiles of the [Verhulstetal2018](https://github.com/HearingTechnology/Verhulstetal2018Model) model. The CoNNear periphery model was first presented in [ICASSP 2022](https://doi.org/10.1109/ICASSP43922.2022.9747683) and was used to design DNN-based hearing-aid strategies (the full paper can be found [here](https://doi.org/10.1109/TASLP.2023.3282093)). 
 
 By default, the example script simulates and plots the outputs of each stage for a pure-tone stimulus of three different levels. The stimulus parameters can be adjusted in the *Simulation parameter definition* section to provide different inputs to the model. The CoNNear model can be executed on a CPU, but the execution time significantly improves with the use of a GPU in Tensorflow.
 
@@ -21,7 +21,7 @@ To run the example script and the CoNNear models in Python, Numpy, Scipy, Keras 
 
 The CoNNear model is comprised by five distinct AECNN models: One for the cochlea stage, one for the inner-hair-cell (IHC) stage and three for the three different auditory-nerve-fiber (ANF) types. For an auditory stimulus given as input, it predicts the basilar-membrane (BM) vibration, IHC transduction and ANF firing rates along 201 cochlear channels.
 Each distinct model is included in the *connear* folder, with the json files corresponding to the Tensorflow model descriptions and the h5 files corresponding to the trained weights for each model. 1-CF json files are also included in the *connear* folder for each of the CoNNear IHC-ANF models which can be used separately to simulate single-unit neuronal responses. 
-All models were trained on training sets comprised by 2310 speech sentences of the TIMIT speech dataset. Using the speech dataset as input to the reference model, the outputs of each stage were simulated and were used to form each training dataset. More details about the cochlear model can be found at https://doi.org/10.1038/s42256-020-00286-8 and about the IHC-ANF models at https://doi.org/10.1038/s42003-021-02341-5.
+All models were trained on training sets comprised by 2310 speech sentences of the TIMIT speech dataset. Using the speech dataset as input to the reference model, the outputs of each stage were simulated and were used to form each training dataset. More details about the cochlear model can be found [here](https://doi.org/10.1038/s42256-020-00286-8), about the IHC-ANF models [here](https://doi.org/10.1038/s42003-021-02341-5), and about the branched implementation of the ANF model [here](https://doi.org/10.1109/ICASSP43922.2022.9747683).
 
 #### Cochlea stage
 
@@ -49,11 +49,11 @@ The ANF stage was adopted from the [CoNNear_IHC-ANF](https://github.com/HearingT
 ## Citation
 If you use this code, please cite the corresponding papers:
 
-**CoNNear<sub>cochlea</sub>**: Baby, D., Van Den Broucke, A. & Verhulst, S. A convolutional neural-network model of human cochlear mechanics and filter tuning for real-time applications. Nat Mach Intell 3, 134–143 (2021). https://doi.org/10.1038/s42256-020-00286-8
+**CoNNear<sub>cochlea</sub>**: Baby, D., Van Den Broucke, A. & Verhulst, S. A convolutional neural-network model of human cochlear mechanics and filter tuning for real-time applications. Nature Machine Intelligence, 3(2), 134-143 (2021). https://doi.org/10.1038/s42256-020-00286-8
 
-**CoNNear<sub>IHC-ANF</sub>**: Drakopoulos, F., Baby, D. & Verhulst, S. A convolutional neural-network framework for modelling auditory sensory cells and synapses. Commun Biol 4, 827 (2021). https://doi.org/10.1038/s42003-021-02341-5
+**CoNNear<sub>IHC-ANF</sub>**: Drakopoulos, F., Baby, D. & Verhulst, S. A convolutional neural-network framework for modelling auditory sensory cells and synapses. Communications Biology, 4(1), 827 (2021). https://doi.org/10.1038/s42003-021-02341-5
 
-**CoNNear<sub>ANF</sub> - branched**: Drakopoulos, F. & Verhulst, S. A neural-network framework for the design of individualised hearing-loss compensation. arXiv preprint arXiv:2207.07091 (2022). https://doi.org/10.48550/arxiv.2207.07091
+**CoNNear - branched**: Drakopoulos, F. & Verhulst, S. A neural-network framework for the design of individualised hearing-loss compensation. IEEE/ACM Transactions on Audio, Speech, and Language Processing, 31, 2395-2409 (2023). https://doi.org/10.1109/TASLP.2023.3282093.
 
 This repository can also be cited separately:
 
