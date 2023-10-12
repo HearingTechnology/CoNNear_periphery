@@ -1,6 +1,6 @@
 ## CoNNear: A convolutional neural-network model of the human auditory periphery
 
-This repository contains the **branched** version of the CoNNear periphery model and an example Python script `connear_example.py` that can be used to simulate the outputs of each different stage of the auditory periphery to basic auditory stimuli. The *connear* folder contains the three CoNNear modules, which correspond to the trained CNN models of each separate stage of auditory processing. The folder also contains four hearing-impaired (HI) cochlear models obtained via [transfer learning](http://dx.doi.org/10.21437/Interspeech.2020-2818), corresponding to the Flat25, Flat35, Slope25, Slope35 HI profiles of the [Verhulstetal2018](https://github.com/HearingTechnology/Verhulstetal2018Model) model. The CoNNear periphery model was first presented in [ICASSP 2022](https://doi.org/10.1109/ICASSP43922.2022.9747683) and was used to design DNN-based hearing-aid strategies (the full paper can be found [here](https://doi.org/10.1109/TASLP.2023.3282093)). 
+This repository contains the **branched** version of the CoNNear periphery model and an example Python script `connear_example.py` that can be used to simulate the outputs of each different stage of the auditory periphery to basic auditory stimuli. The *connear* folder contains the three CoNNear modules, which correspond to the trained CNN models of each separate stage of auditory processing. The folder also contains four hearing-impaired (HI) cochlear models obtained via [transfer learning](http://dx.doi.org/10.21437/Interspeech.2020-2818), corresponding to the Flat25, Flat35, Slope25, Slope35 HI profiles of the [Verhulstetal2018](https://github.com/HearingTechnology/Verhulstetal2018Model) model. The CoNNear periphery model was first presented in [ICASSP 2022](https://doi.org/10.1109/ICASSP43922.2022.9747683) and was used to design DNN-based hearing-aid strategies (the full paper can be found [here](https://doi.org/10.1109/TASLP.2023.3282093) or [here](https://doi.org/10.48550/arxiv.2207.07091)). 
 
 By default, the example script simulates and plots the outputs of each stage for a pure-tone stimulus of three different levels. The stimulus parameters can be adjusted in the *Simulation parameter definition* section to provide different inputs to the model. The CoNNear model can be executed on a CPU, but the execution time significantly improves with the use of a GPU in Tensorflow.
 
@@ -63,7 +63,7 @@ Drakopoulos, F., Van Den Broucke, A., Baby, D. & Verhulst, S. HearingTechnology/
 ##
 For questions, please reach out to one of the corresponding authors
 
-* Fotios Drakopoulos: fotios.drakopoulos@ugent.be
+* Fotios Drakopoulos: f.drakopoulos@ucl.ac.uk
 * Arthur Van Den Broucke: arthur.vandenbroucke@ugent.be
 * Deepak Baby: deepakbabycet@gmail.com
 * Sarah Verhulst: s.verhulst@ugent.be
