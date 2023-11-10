@@ -10,6 +10,7 @@ import numpy as np
 import tensorflow as tf
 import scipy.signal as sp_sig
 import scipy.io.wavfile
+from typing import List, Optional, Tuple, Union
 from os import path
 
 from tensorflow.keras.models import model_from_json, Model
@@ -17,15 +18,19 @@ from tensorflow.keras.layers import Input
 from tensorflow.keras.utils import CustomObjectScope
 from tensorflow.keras.initializers import glorot_uniform
 
-def rms (x, axis=0):
-    # compute rms of a matrix
+def rms (x: np.ndarray, axis: int = 0) -> np.ndarray:
+    """Compute RMS energy of a matrix over the specified axis."""
     sq = np.mean(np.square(x), axis = axis)
     return np.sqrt(sq)
-    
-def next_power_of_2(x):
+
+def next_power_of_2(x: int) -> int:
+    """Compute the next power of 2 bigger than the input x."""
     return 1 if x == 0 else int(2**np.ceil(np.log2(x)))
 
-def wavfile_read(wavfile,fs=[]):
+def wavfile_read(wavfile: str,fs: Optional[float] = None) -> Tuple[np.ndarray, float]:
+    """Read a wavfile and normalize it to +/-1.
+    If fs is given the signal is resampled to the given sampling frequency.
+    """
     # read a wavfile and normalize it
     # if fs is given the signal is resampled to the given sampling frequency
     fs_signal, speech = scipy.io.wavfile.read(wavfile)
@@ -47,8 +52,23 @@ def wavfile_read(wavfile,fs=[]):
 
     return signalr, fs
 
-def load_connear_model(modeldir,json_name="/Gmodel.json",weights_name="/Gmodel.h5",crop=1,name=[]):
-    # Function to load each CoNNear model using tensorflow
+def load_connear_model(modeldir: str, json_name: str = "/Gmodel.json",
+                       weights_name: str =  "/Gmodel.h5", 
+                       crop: bool = True, name: Optional[str] = None) -> tf.keras.Model:
+    """Function to load one portion of a CoNNear model.
+    
+    Args:
+      modeldir: Where to find the model and weight files
+      json_name: The file within modeldir to find the TF model description
+      weights_name: The file within modeldir to find the weights data
+      crop: Drop the last layer of the model, which crops out the extra context 
+        provided to the model.  Set to False to remove this last layer and provide 
+        the context to the next part of the model.
+      name: The name for this new model.
+
+    Returns:
+      A Tensorflow Model
+    """
     #print ("loading model from " + modeldir )
     json_file = open (modeldir + json_name, "r")
     loaded_model_json = json_file.read()
@@ -74,16 +94,27 @@ def load_connear_model(modeldir,json_name="/Gmodel.json",weights_name="/Gmodel.h
 
     return model
     
-def build_connear(modeldir,poles='',Ncf=201,full_model=0,name='periphery_model',print_summary=0):
-    ## Function to load the separate CoNNear modules
-    ## If a string is given for poles then the corresponding HI weights are
-    ## loaded for the cochlear model
-    ## If no argument is given for the Ncf variable then the 201-CF CoNNear
-    ## models are loaded, otherwise the function tries to load the CoNNear 
-    ## model definitions with the number of channels given in Ncf
-    ## If 1 is given for the full_model argument then a concatenated version 
-    ## of the full periphery model (cochlea, IHC, ANFs) is returned 
-    ## By default the function loads and returns each module separately
+def build_connear(modeldir: str, poles: str = '', Ncf: int = 201, full_model: bool = False,
+                  name: str = 'periphery_model', print_summary: bool = False) -> Union[
+                      Tuple[tf.keras.Model, tf.keras.Model, tf.keras.Model],
+                      Tuple[tf.keras.Model, tf.Tensor]]:
+    """Function to load the separate prectrained CoNNear modules.
+
+    Args:
+      modeldir: From which directory to load the model and weights
+      poles: The HL curve to model. If a string is given then the corresponding HI weights are 
+        loaded for the cochlear model. The default is to model a normal auditory system. 
+        (The poles name was adopted from the Verhulst et al model as it was used to define the 
+        different cochlear filter profiles/tuning.)
+      Ncf: Number of channels (center frequencies). If no argument is given for the Ncf 
+        variable then the 201-CF CoNNear models are loaded, otherwise the function tries to 
+        load the CoNNear model definitions with the number of channels given in Ncf
+      full_model: Whether to return three separate periphery models (cochlea, IHC, ANFs) or 
+        a (combined) full periphery model is returned. By default the function loads and returns 
+        each module separately.
+      name: The name assigned to this Model.
+      print_summary: Print the Keras summary of the model
+    """
     assert(Ncf == 201 or Ncf == 21 or Ncf == 1), "Only 201-, 21- and 1-CF models are provided by the current framework for the moment."
     if Ncf != 201:
         cf_flag = '_' + str(Ncf) + 'cf'
@@ -109,7 +140,7 @@ def build_connear(modeldir,poles='',Ncf=201,full_model=0,name='periphery_model',
     anf.trainable=False
     for l in anf.layers:
         l.trainable=False
-    
+
     if full_model:
         audio_in = Input(shape=(None,1), name="audio_input", dtype='float32')
         cochlea = Model(cochlea.layers[0].input,cochlea.layers[-1].output)
@@ -129,16 +160,27 @@ def build_connear(modeldir,poles='',Ncf=201,full_model=0,name='periphery_model',
         periphery.layers[-1].name = 'anf_model'
         if print_summary:
             periphery.summary()
-        
+
         return periphery, CFs
     else:
         return cochlea, ihc, anf
+
+def slice_1dsignal(signal: np.ndarray, window_size: int, winshift: int, minlength: int, 
+                   left_context:int = 256, right_context:int = 256) -> np.ndarray:
+    """Return windows of the given signal by sweeping in stride fractions of window. Slices that are
+    less than minlength are omitted. Input signal must be a 1D-shaped array.
+
+    Args:
+      signal: A one-dimensiona input waveform
+      window_size: The size of each window of data from the signal.
+      winshift: How much to shift the window as we progress down the signal.
+      minlength: Drop (final) windows that have less than this number of samples.
+      left_context: How much context to add (from earlier parts of the signal) before
+        the current window. (Or add zeros if not enough signal)
+      right_context: Like left, but to the right of the current window.
     
-def slice_1dsignal(signal, window_size, winshift, minlength, left_context=256, right_context=256):
-    """ 
-    Return windows of the given signal by sweeping in stride fractions of window.
-    Slices that are less than minlength are omitted.
-    Signal must be a 1D-shaped array.
+    Returns:
+      A 3D tensor of size num_frames x window_size x 1
     """
     assert len(signal.shape) == 1, "signal must be a 1D-shaped array"
     
@@ -166,10 +208,21 @@ def slice_1dsignal(signal, window_size, winshift, minlength, left_context=256, r
     slices = np.expand_dims(slices, axis=2) # the CNN will need 3D data
     return slices
     
-def unslice_3dsignal(signal, winlength, winshift, ignore_first_set=0, fs = 20e3, trailing_silence = 0.):
-    """ 
-    Merge the different windows of the signal.
-    The first dimension corresponds to the windows and the second to the samples of each window.
+def unslice_3dsignal(signal: np.ndarray, winlength: int, winshift: int, 
+                     ignore_first_set: int = 0, fs: float = 20e3, 
+                     trailing_silence: float = 0.) -> np.ndarray:
+    """  Merge the different windows of the signal, undoing the slice format above, after processing.
+
+    Args:
+      signal: A 3d tensor of shape num_frames x winlength x num_channels
+      winlength: How long is each frame of data?
+      winshift: How much is each window of data shifted in samples?
+      ignore_first_set: ????
+      fs: Sample rate of the data, needed for scaling trailing silence.
+      trailing_silence: ???
+    
+    Returns:
+      A numpy array of size ?????
     """
     assert len(signal.shape) == 3, "signal must be a 3D-shaped array"
     
@@ -191,9 +244,20 @@ def unslice_3dsignal(signal, winlength, winshift, ignore_first_set=0, fs = 20e3,
     tl_2d = np.expand_dims(tl_2d[trailing_zeros:,:], axis=0)
     return tl_2d
     
-def compute_oae(vbm_out, cf_no=0,sig_start=0):
-    # compute the fft of the vbm output over the cf_no channel to predict the oae
-    # the fft is applied on the second dimension (axis=1)
+def compute_oae(vbm_out: np.ndarray, cf_no: int = 0,sig_start: int = 0) -> Tuple[np.array, int]:
+    """Compute the fft of the vbm output over the cf_no channel to predict the oae
+    The fft is applied on the second dimension (axis=1).
+
+    Args:
+      vbm_out:  The velocity of the basilar membrane motion (???).
+        An array of size num_frames x frame_size x num_channels
+      cf_no: Which channel number to pick out
+      sig_start: How many samples to skip in the frame (because of context???)
+    
+    Returns:
+      A 2-ple: the OAE magnitude of size num_frames x fftSize/2+1, and 
+                the size of the real part of the fft.
+    """
     oae_sig = vbm_out[:, sig_start:, cf_no] # pick a CF
     oae_fft = np.fft.fft(oae_sig)
     nfft = int(oae_fft.shape[1]/2+1)
