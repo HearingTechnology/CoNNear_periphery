@@ -211,7 +211,8 @@ def slice_1dsignal(signal: np.ndarray, window_size: int, winshift: int, minlengt
 def unslice_3dsignal(signal: np.ndarray, winlength: int, winshift: int, 
                      ignore_first_set: int = 0, fs: float = 20e3, 
                      trailing_silence: float = 0.) -> np.ndarray:
-    """  Merge the different windows of the signal, undoing the slice format above, after processing.
+    """Merge the different windows of the signal, undoing the slice format above, 
+    usually after processing. Overlap and add the different frames.
 
     Args:
       signal: A 3d tensor of shape num_frames x winlength x num_channels
@@ -222,16 +223,17 @@ def unslice_3dsignal(signal: np.ndarray, winlength: int, winshift: int,
       trailing_silence: ???
     
     Returns:
-      A numpy array of size ?????
+      A numpy array of size 1 x number of samples x number of channels.
     """
     assert len(signal.shape) == 3, "signal must be a 3D-shaped array"
-    
+
     nframes = signal.shape[0]
     slength = ((nframes - 1)) * winshift + winlength
     tl_2d = np.zeros((slength, signal.shape[2]))
-    scale_ = np.zeros((slength,1))
+    scale_ = np.zeros((slength,1))  # Keep track of number of windows added here.
     dummyones = np.ones((signal.shape[0], signal.shape[1]))
     trailing_zeros = int(trailing_silence * fs)
+    # Add in the first frame.
     sigrange = range (winlength)
     tl_2d [sigrange, :] = tl_2d [sigrange, :] + signal[0]
     scale_[sigrange,0] = scale_[sigrange,0] + dummyones[0]
@@ -239,17 +241,17 @@ def unslice_3dsignal(signal: np.ndarray, winlength: int, winshift: int,
         sigrange = range (i * winshift + ignore_first_set, (i*winshift) + winlength)
         tl_2d [sigrange, :] = tl_2d [sigrange, :] + signal[i,ignore_first_set:,:]
         scale_[sigrange,0] = scale_[sigrange,0] + dummyones[i,ignore_first_set:]
-    
+  
     tl_2d /= scale_
     tl_2d = np.expand_dims(tl_2d[trailing_zeros:,:], axis=0)
     return tl_2d
-    
+ 
 def compute_oae(vbm_out: np.ndarray, cf_no: int = 0,sig_start: int = 0) -> Tuple[np.array, int]:
     """Compute the fft of the vbm output over the cf_no channel to predict the oae
     The fft is applied on the second dimension (axis=1).
 
     Args:
-      vbm_out:  The velocity of the basilar membrane motion (???).
+      vbm_out:  The velocity of the basilar membrane motion.
         An array of size num_frames x frame_size x num_channels
       cf_no: Which channel number to pick out
       sig_start: How many samples to skip in the frame (because of context???)
