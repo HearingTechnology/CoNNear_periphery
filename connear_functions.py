@@ -31,8 +31,6 @@ def wavfile_read(wavfile: str,fs: Optional[float] = None) -> Tuple[np.ndarray, f
     """Read a wavfile and normalize it to +/-1.
     If fs is given the signal is resampled to the given sampling frequency.
     """
-    # read a wavfile and normalize it
-    # if fs is given the signal is resampled to the given sampling frequency
     fs_signal, speech = scipy.io.wavfile.read(wavfile)
     if not fs:
         fs=fs_signal
@@ -89,8 +87,6 @@ def load_connear_model(modeldir: str, json_name: str = "/Gmodel.json",
             model=Model(model.layers[0].input, model.layers[-2].output,name=name)
         else:
             model=Model(model.layers[0].input, model.layers[-2].output) # get uncropped output
-    #else:
-    #    model=Model(model.layers[0].input, model.layers[-1].output) # get cropped output
 
     return model
     
@@ -98,7 +94,7 @@ def build_connear(modeldir: str, poles: str = '', Ncf: int = 201, full_model: bo
                   name: str = 'periphery_model', print_summary: bool = False) -> Union[
                       Tuple[tf.keras.Model, tf.keras.Model, tf.keras.Model],
                       Tuple[tf.keras.Model, tf.Tensor]]:
-    """Function to load the separate prectrained CoNNear modules.
+    """Function to load the separate pretrained CoNNear modules.
 
     Args:
       modeldir: From which directory to load the model and weights
@@ -110,8 +106,8 @@ def build_connear(modeldir: str, poles: str = '', Ncf: int = 201, full_model: bo
         variable then the 201-CF CoNNear models are loaded, otherwise the function tries to 
         load the CoNNear model definitions with the number of channels given in Ncf
       full_model: Whether to return three separate periphery models (cochlea, IHC, ANFs) or 
-        a (combined) full periphery model is returned. By default the function loads and returns 
-        each module separately.
+        a (combined) full periphery model. By default the function loads and returns each
+        module separately.
       name: The name assigned to this Model.
       print_summary: Print the Keras summary of the model
     """
@@ -173,7 +169,8 @@ def slice_1dsignal(signal: np.ndarray, window_size: int, winshift: int, minlengt
     Args:
       signal: A one-dimensiona input waveform
       window_size: The size of each window of data from the signal.
-      winshift: How much to shift the window as we progress down the signal.
+      winshift: How much to shift the window as we progress down the signal. 
+        If winshift = window_size then the overlap between windows is 0.
       minlength: Drop (final) windows that have less than this number of samples.
       left_context: How much context to add (from earlier parts of the signal) before
         the current window. (Or add zeros if not enough signal)
@@ -202,7 +199,7 @@ def slice_1dsignal(signal: np.ndarray, window_size: int, winshift: int, minlengt
             slice_ = np.concatenate((np.zeros((1, left_context - beg_i)),np.array([signal]), np.zeros((1, end_i - n_samples))), axis=1)
         else :
             slice_ = np.concatenate((np.array([signal[beg_i_context:]]), np.zeros((1, end_i - n_samples))), axis=1)
-        #print(slice_.shape)
+
         slices.append(slice_)
     slices = np.vstack(slices)
     slices = np.expand_dims(slices, axis=2) # the CNN will need 3D data
@@ -211,16 +208,28 @@ def slice_1dsignal(signal: np.ndarray, window_size: int, winshift: int, minlengt
 def unslice_3dsignal(signal: np.ndarray, winlength: int, winshift: int, 
                      ignore_first_set: int = 0, fs: float = 20e3, 
                      trailing_silence: float = 0.) -> np.ndarray:
-    """Merge the different windows of the signal, undoing the slice format above, 
-    usually after processing. Overlap and add the different frames.
+    """Reconstructs an 1-D signal sliced in windows. Merge the different windows of 
+    the signal, undoing the slice format above, usually after processing. Overlap 
+    and add the different frames.
 
     Args:
       signal: A 3d tensor of shape num_frames x winlength x num_channels
-      winlength: How long is each frame of data?
-      winshift: How much is each window of data shifted in samples?
-      ignore_first_set: ????
-      fs: Sample rate of the data, needed for scaling trailing silence.
-      trailing_silence: ???
+      winlength: The size of each window of data from the signal with context on
+      both sides (window_size + left_context + right_context)
+      winshift: How much each window of data is shifted in samples along the signal,
+      e.g. if winshift = winlength then the overlap between windows is 0.
+      ignore_first_set: Set of samples that will be omitted from the beginning of the
+      provided signal, i.e. context in the sliced signal. This parameter can be used 
+      to skip the left context from the sliced signal when merging consecutive windows.
+      This argument should be used in combination with the trailing_silence parameter
+      to remove left context present in all windows of the sliced signal. However, 
+      it is suggested to manually remove context from the sliced array before providing
+      it as an input to this function and setting these parameters to 0 instead, as 
+      proper functionality is not guaranteed.
+      fs: Sample rate of the data, needed for scaling trailing silence (if provided).
+      trailing_silence: Length of zeros (silence) to be removed from the beginning of
+      the reconstructed signal, if context was present originally. Defined in s and 
+      scaled based on the fs.
     
     Returns:
       A numpy array of size 1 x number of samples x number of channels.
@@ -228,21 +237,23 @@ def unslice_3dsignal(signal: np.ndarray, winlength: int, winshift: int,
     assert len(signal.shape) == 3, "signal must be a 3D-shaped array"
 
     nframes = signal.shape[0]
-    slength = ((nframes - 1)) * winshift + winlength
+    slength = ((nframes - 1)) * winshift + winlength # total length of the reconstructed signal
     tl_2d = np.zeros((slength, signal.shape[2]))
     scale_ = np.zeros((slength,1))  # Keep track of number of windows added here.
     dummyones = np.ones((signal.shape[0], signal.shape[1]))
-    trailing_zeros = int(trailing_silence * fs)
+    trailing_zeros = int(trailing_silence * fs) # zeros to add at the beginning of the reconstructed signal
     # Add in the first frame.
     sigrange = range (winlength)
     tl_2d [sigrange, :] = tl_2d [sigrange, :] + signal[0]
     scale_[sigrange,0] = scale_[sigrange,0] + dummyones[0]
+    # Overlap-add
     for i in range(1,nframes):
         sigrange = range (i * winshift + ignore_first_set, (i*winshift) + winlength)
         tl_2d [sigrange, :] = tl_2d [sigrange, :] + signal[i,ignore_first_set:,:]
         scale_[sigrange,0] = scale_[sigrange,0] + dummyones[i,ignore_first_set:]
-  
+    # Scale the overlapping parts accordingly
     tl_2d /= scale_
+    # Return the reconstructed signal as a 3-D array
     tl_2d = np.expand_dims(tl_2d[trailing_zeros:,:], axis=0)
     return tl_2d
  
@@ -251,14 +262,16 @@ def compute_oae(vbm_out: np.ndarray, cf_no: int = 0,sig_start: int = 0) -> Tuple
     The fft is applied on the second dimension (axis=1).
 
     Args:
-      vbm_out:  The velocity of the basilar membrane motion.
+      vbm_out: The velocity of the basilar membrane motion.
         An array of size num_frames x frame_size x num_channels
       cf_no: Which channel number to pick out
-      sig_start: How many samples to skip in the frame (because of context???)
+      sig_start: How many samples to skip from the beginning of the frame, to avoid 
+        including any context or silence in the FFT estimation.
     
     Returns:
-      A 2-ple: the OAE magnitude of size num_frames x fftSize/2+1, and 
-                the size of the real part of the fft.
+      A 2-ple containing: 
+        oae_fft_mag: the OAE magnitude of size num_frames x fftSize/2+1
+        nfft: the size of the real part of the fft.
     """
     oae_sig = vbm_out[:, sig_start:, cf_no] # pick a CF
     oae_fft = np.fft.fft(oae_sig)
